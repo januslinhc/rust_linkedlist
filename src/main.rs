@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::fmt::{write, Debug, Formatter};
+use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
 
 struct Node<T: Debug> {
@@ -45,6 +45,7 @@ struct LinkedList<T: Debug> {
     _head: Option<Rc<RefCell<Node<T>>>>,
     _tail: Option<Rc<RefCell<Node<T>>>>,
     _size: u32,
+    _node_to_be_removed: Option<Rc<RefCell<Node<T>>>>,
 }
 
 impl<T: Debug> LinkedList<T> {
@@ -53,6 +54,7 @@ impl<T: Debug> LinkedList<T> {
             _head: None,
             _tail: None,
             _size: 0,
+            _node_to_be_removed: None,
         }
     }
 
@@ -74,6 +76,23 @@ impl<T: Debug> LinkedList<T> {
 
     fn add(&mut self, value: T) {
         self.add_last(value);
+    }
+
+    fn add_head(&mut self, value: T) {
+        let new_node = Node::<T>::new(value);
+        let head = &self._head;
+        match head {
+            None => {
+                self.set_head(Some(new_node.clone()));
+                self.set_tail(Some(new_node.clone()));
+            }
+            Some(head_node) => {
+                head_node.borrow_mut().set_prev(Some(new_node.clone()));
+                new_node.clone().borrow_mut().set_next(Some(head_node.clone()));
+                self.set_head(Some(new_node.clone()));
+            }
+        }
+        self._size += 1;
     }
 
     fn set_head(&mut self, value: Option<Rc<RefCell<Node<T>>>>) {
@@ -104,6 +123,44 @@ impl<T: Debug> LinkedList<T> {
     }
 }
 
+trait Queue<T: Debug> {
+    fn enqueue(&mut self, value: T);
+
+    fn dequeue(&mut self) -> Option<Rc<T>>;
+
+    fn peek(&self) -> Option<Rc<T>>;
+}
+
+impl<T: Debug> Queue<T> for LinkedList<T> {
+    fn enqueue(&mut self, value: T) {
+        self.add(value);
+    }
+
+    fn dequeue(&mut self) -> Option<Rc<T>> {
+        let node_to_be_removed = self._head.to_owned();
+        match node_to_be_removed {
+            None => None,
+            Some(node) => {
+                let new_head = &node.borrow()._next;
+                self._node_to_be_removed = Some(node.clone());
+                self.set_head(new_head.clone());
+                self._size -= 1;
+                Some(node.borrow().value.clone())
+            }
+        }
+    }
+
+    fn peek(&self) -> Option<Rc<T>> {
+        match &self._head {
+            None => None,
+            Some(head_node) => {
+                let head_node = head_node.borrow();
+                Some(head_node.value.clone())
+            }
+        }
+    }
+}
+
 fn main() {
     let mut list = LinkedList::<String>::new();
     list.add("Hello ");
@@ -112,11 +169,34 @@ fn main() {
     list.add("Janus ");
     list.add("Lin!");
 
-    list.for_each(|v| {
-        print!("{}", v);
-    });
+    print_all(&mut list);
     // Hello I am Janus Lin!
 
     println!("\nsize={}", list.size());
     // size=5
+
+    list.add_head("Hello ");
+    // Hello Hello I am Janus Lin!
+
+    print_all(&mut list);
+
+    println!("\nsize={}", list.size());
+    // size=6
+
+    let value = list.dequeue().expect("Expected non-null!");
+    println!("{}", value);
+    // Hello
+
+    print_all(&mut list);
+    // Hello I am Janus Lin!
+
+    println!("size={}", list.size());
+    // size=5
+
+}
+
+fn print_all(list: &mut LinkedList<&str>) {
+    list.for_each(|v| {
+        print!("{}", v);
+    });
 }
