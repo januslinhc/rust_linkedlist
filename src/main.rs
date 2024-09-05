@@ -117,7 +117,6 @@ impl<T: Debug> LinkedList<T> {
         let mut optional_data = self._head.clone();
         while optional_data.is_some() {
             if let Some(node) = optional_data {
-                let x = node.clone();
                 let y = node.borrow();
                 callback(y.value.clone());
                 optional_data = y._next.clone();
