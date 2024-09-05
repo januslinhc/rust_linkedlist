@@ -88,7 +88,10 @@ impl<T: Debug> LinkedList<T> {
             }
             Some(head_node) => {
                 head_node.borrow_mut().set_prev(Some(new_node.clone()));
-                new_node.clone().borrow_mut().set_next(Some(head_node.clone()));
+                new_node
+                    .clone()
+                    .borrow_mut()
+                    .set_next(Some(head_node.clone()));
                 self.set_head(Some(new_node.clone()));
             }
         }
@@ -169,7 +172,7 @@ fn main() {
     list.add("Janus ");
     list.add("Lin!");
 
-    print_all(&mut list);
+    print_all(&list);
     // Hello I am Janus Lin!
 
     println!("\nsize={}", list.size());
@@ -187,15 +190,14 @@ fn main() {
     println!("{}", value);
     // Hello
 
-    print_all(&mut list);
+    print_all(&list);
     // Hello I am Janus Lin!
 
     println!("size={}", list.size());
     // size=5
-
 }
 
-fn print_all(list: &mut LinkedList<&str>) {
+fn print_all(list: &LinkedList<&str>) {
     list.for_each(|v| {
         print!("{}", v);
     });
