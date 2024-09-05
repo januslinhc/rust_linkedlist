@@ -178,7 +178,7 @@ fn main() {
     println!("\nsize={}", list.size());
     // size=5
 
-    list.add_head("Hello ");
+    list.enqueue("Hello ");
     // Hello Hello I am Janus Lin!
 
     print_all(&mut list);
